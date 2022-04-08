@@ -7,7 +7,19 @@ const ErrorResponse = require("../utils/errorResponse");
 // @route       GET api/v1/bootcamps
 // @accesss     Public
 exports.getBootcamps = asyncHandler(async (req, res, next) => {
-  const bootcamps = await Bootcamp.find();
+  let query;
+
+  let queryStr = JSON.stringify(req.query);
+
+  // Add $ sign to filter numbers (greater then, less then and etc)
+  queryStr = queryStr.replace(
+    /\b(gt|gte|lt|lte|in)\b/g,
+    (match) => `$${match}`
+  );
+
+  query = Bootcamp.find(JSON.parse(queryStr));
+
+  const bootcamps = await query;
 
   res.status(201).json({
     success: true,

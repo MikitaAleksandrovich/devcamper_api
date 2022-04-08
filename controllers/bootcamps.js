@@ -9,16 +9,42 @@ const ErrorResponse = require("../utils/errorResponse");
 exports.getBootcamps = asyncHandler(async (req, res, next) => {
   let query;
 
-  let queryStr = JSON.stringify(req.query);
+  // Copy req.query
+  const reqQuery = { ...req.query };
 
-  // Add $ sign to filter numbers (greater then, less then and etc)
+  // Fields to exclude
+  const removeFields = ["select", "sort"];
+
+  // Loop over removeFields and remove them from reqQuery
+  removeFields.forEach((param) => delete reqQuery[param]);
+
+  // Create query string
+  let queryStr = JSON.stringify(reqQuery);
+
+  // Create operators ($gt, $gte, etc)
   queryStr = queryStr.replace(
     /\b(gt|gte|lt|lte|in)\b/g,
     (match) => `$${match}`
   );
 
+  // Finding resource
   query = Bootcamp.find(JSON.parse(queryStr));
 
+  // Select Fields
+  if (req.query.select) {
+    const selectedFields = req.query.select.split(",").join(" ");
+    query = query.select(selectedFields);
+  }
+
+  // Sort Fields
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(",").join(" ");
+    query = query.sort(sortBy);
+  } else {
+    query = query.sort("-createdAt");
+  }
+
+  // Executing query
   const bootcamps = await query;
 
   res.status(201).json({

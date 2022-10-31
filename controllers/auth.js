@@ -35,8 +35,6 @@ exports.login = asyncHandler(async (req, res, next) => {
   // Check for the user
   const user = await User.findOne({ email }).select("+password");
 
-  console.log("user", user);
-
   if (!user) {
     return next(new ErrorResponse("Invalid email or password", 401));
   }
@@ -63,8 +61,8 @@ const sendTokenResponseWithCookie = (user, statusCode, res) => {
     httpOnly: true,
   };
 
-  if(process.env.NODE_ENV === 'production') {
-      options.secure = true
+  if (process.env.NODE_ENV === "production") {
+    options.secure = true;
   }
 
   res.status(statusCode).cookie("token", token, options).json({
@@ -72,3 +70,15 @@ const sendTokenResponseWithCookie = (user, statusCode, res) => {
     token,
   });
 };
+
+// @description Get current logged in user
+// @route       POST api/v1/auth/me
+// @accesss     Private
+exports.getMe = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
